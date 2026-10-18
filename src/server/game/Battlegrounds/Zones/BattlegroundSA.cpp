@@ -458,6 +458,13 @@ void BattlegroundSA::PostUpdateImpl(uint32 diff)
         {
             SendTime();
             UpdateDemolisherSpawns();
+            if (_graveyardInteractionTimer <= diff)
+            {
+                _graveyardInteractionTimer = IN_MILLISECONDS;
+                RestoreGraveyardInteractionFlags();
+            }
+            else
+                _graveyardInteractionTimer -= diff;
         }
     }
 }
@@ -888,6 +895,22 @@ void BattlegroundSA::UpdateObjectInteractionFlags()
     for (uint8 i = BG_SA_CENTRAL_FLAG; i <= BG_SA_LEFT_FLAG; ++i)
         UpdateObjectInteractionFlags(i);
     UpdateObjectInteractionFlags(BG_SA_TITAN_RELIC);
+}
+
+void BattlegroundSA::RestoreGraveyardInteractionFlags()
+{
+    // Button resets restore template flags, including NOT_SELECTABLE, after the gates have already unlocked them.
+    for (uint8 index = BG_SA_CENTRAL_FLAG; index <= BG_SA_LEFT_FLAG; ++index)
+    {
+        BG_SA_Graveyards const graveyard = index == BG_SA_CENTRAL_FLAG ? BG_SA_CENTRAL_CAPTURABLE_GY
+                                           : index == BG_SA_RIGHT_FLAG ? BG_SA_RIGHT_CAPTURABLE_GY
+                                                                       : BG_SA_LEFT_CAPTURABLE_GY;
+        if (GraveyardStatus[graveyard] == Attackers || !CanInteractWithObject(index))
+            continue;
+        if (GameObject* flag = GetBGObject(index))
+            if (flag->getLootState() == GO_READY && flag->HasGameObjectFlag(GO_FLAG_NOT_SELECTABLE))
+                UpdateObjectInteractionFlags(index);
+    }
 }
 
 void BattlegroundSA::EventPlayerClickedOnFlag(Player* Source, GameObject* gameObject)

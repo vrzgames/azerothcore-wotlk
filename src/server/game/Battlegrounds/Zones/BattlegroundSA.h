@@ -497,6 +497,17 @@ public:
     void RemovePlayer(Player* player) override;
     void HandleAreaTrigger(Player* player, uint32 trigger) override;
 
+    [[nodiscard]] TeamId GetAttackerTeam() const { return Attackers; }
+    [[nodiscard]] BG_SA_Status GetSotaStatus() const { return Status; }
+    [[nodiscard]] BG_SA_GateState GetGateState(uint32 gate) const
+    {
+        return gate <= BG_SA_ANCIENT_GATE ? GateStatus[gate] : BG_SA_GATE_OK;
+    }
+    [[nodiscard]] TeamId GetGraveyardOwner(uint32 graveyard) const
+    {
+        return graveyard < BG_SA_MAX_GY ? GraveyardStatus[graveyard] : TEAM_NEUTRAL;
+    }
+
     // Teleporters
     void DefendersPortalTeleport(GameObject* portal, Player* plr);
 
@@ -560,6 +571,7 @@ private:
     /// Updates interaction flags of specific objects
     void UpdateObjectInteractionFlags(uint32 objectId);
     void UpdateObjectInteractionFlags();
+    void RestoreGraveyardInteractionFlags();
     /**
      * \brief Called when a gate is destroy
      * -Give honor to player witch destroy it
@@ -625,5 +637,6 @@ private:
     bool _notEvenAScratch[PVP_TEAMS_COUNT];
     /// Toggle for alternating player spawns between East and West ships (true = first/East ship, false = second/West ship)
     bool _nextShipIsEast;
+    uint32 _graveyardInteractionTimer = 0;
 };
 #endif

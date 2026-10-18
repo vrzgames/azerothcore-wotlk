@@ -2251,17 +2251,11 @@ bool GameObject::IsInRange3d(float x, float y, float z, float radius) const
     float dx = x - GetPositionX();
     float dy = y - GetPositionY();
     float dz = z - GetPositionZ();
-    float dist = std::sqrt(dx * dx + dy * dy);
-    //! Check if the distance between the 2 objects is 0, can happen if both objects are on the same position.
-    //! The code below this check wont crash if dist is 0 because 0/0 in float operations is valid, and returns infinite
-    if (G3D::fuzzyEq(dist, 0.0f))
-        return true;
-
     float scale = GetObjectScale();
-    float sinB = dx / dist;
-    float cosB = dy / dist;
-    dx = dist * (cosA * cosB + sinA * sinB);
-    dy = dist * (cosA * sinB - sinA * cosB);
+    // Keep the height check even when both objects have the same horizontal position.
+    float localX = cosA * dx + sinA * dy;
+    dy = -sinA * dx + cosA * dy;
+    dx = localX;
     return dx < (info->maxX * scale) + radius && dx > (info->minX * scale) - radius
            && dy < (info->maxY * scale) + radius && dy > (info->minY * scale) - radius
            && dz < (info->maxZ * scale) + radius && dz > (info->minZ * scale) - radius;
